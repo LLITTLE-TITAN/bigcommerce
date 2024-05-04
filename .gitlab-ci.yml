@@ -1,0 +1,39 @@
+image: node:20
+
+stages:
+  - npm
+  - test
+  - main
+
+  
+
+
+npm:
+  stage: npm
+  script:
+    - npm config set registry ${CI_NPM_REGISTRY}
+    - npm install
+  cache:
+    paths:
+      - node_modules/
+  artifacts:
+    expire_in: 1 days
+    when: on_success
+    paths:
+      - node_modules/
+
+create_mr_from_staging_into_main:
+  stage: main
+  image: curlimages/curl:latest
+  script:
+    - chmod=+x . scripts/create_main_mr.sh
+    - . scripts/create_main_mr.sh
+  only:
+    - staging
+
+test:
+  stage: test
+  dependencies:
+    - npm
+  script:
+    - npm test -- --passWithNoTests
